@@ -1,12 +1,13 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, 
-  required String title
-  });
+  const LoginScreen({super.key, required String title});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,15 +17,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool visible = true;
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController=TextEditingController();
-   
+  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.brown,
-       
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -34,22 +33,23 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(
                 height: 30,
               ),
-const Text("LOGIN ",style: TextStyle(color: Colors.brown,fontSize: 30,fontWeight: FontWeight.bold)),
-            const  SizedBox(
+              const Text("LOGIN ",
+                  style: TextStyle(
+                      color: Colors.brown,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(
                 height: 30,
               ),
-              
-            
-               
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(
-                      labelText: 'Email Address',
-                      prefixIcon: Icon(Icons.email),
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Email Address',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (value) {
                     if (value!.isNotEmpty && value.contains("@")) {
                       return null;
@@ -62,28 +62,33 @@ const Text("LOGIN ",style: TextStyle(color: Colors.brown,fontSize: 30,fontWeight
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: TextFormField(
-                controller: passwordController,
-                 keyboardType: TextInputType.visiblePassword,
-                 obscureText: visible,
-                    // onFieldSubmitted: (String value){
-                    //   print(value);
-                    // },
-                    // onChanged: (String value){
-                    //   print(value);
-                    // },
-                   
-                  decoration: InputDecoration(labelText: "password",
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.visibility_off,),
-                   suffixIcon: IconButton(onPressed: (){
-                        setState(() {
-                          visible = !visible;
-                        });
-                      },
-                          icon: visible
-                      ? const Icon(Icons.remove_red_eye)
-                      : const Icon(Icons.visibility_off)),),
-                  
+                  controller: passwordController,
+                  keyboardType: TextInputType.visiblePassword,
+                  obscureText: visible,
+                  // onFieldSubmitted: (String value){
+                  //   print(value);
+                  // },
+                  // onChanged: (String value){
+                  //   print(value);
+                  // },
+
+                  decoration: InputDecoration(
+                    labelText: "password",
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(
+                      Icons.visibility_off,
+                    ),
+                    suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            visible = !visible;
+                          });
+                        },
+                        icon: visible
+                            ? const Icon(Icons.remove_red_eye)
+                            : const Icon(Icons.visibility_off)),
+                  ),
+
                   validator: (value) {
                     if (value!.length < 8) {
                       return "password Not Corect";
@@ -92,37 +97,59 @@ const Text("LOGIN ",style: TextStyle(color: Colors.brown,fontSize: 30,fontWeight
                   },
                 ),
               ),
-              const SizedBox(height: 30,),
-             
-
-             Container(
-                width: 300,
-                height: 50,
-                color: Colors.brown,
-                
-                child:MaterialButton(onPressed:()async {
-                 
-                  if (_formKey.currentState!.validate()) {
-                       final SharedPreferences prefs = await SharedPreferences.getInstance();
-                    await prefs.setString('email', emailController.text);
- 
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const HomePage(
-                                // email: emailController.text, 
-                              )),
-                    );
-                  } 
-                },child: const Text('Login',style: TextStyle(color: Colors.white),) ) 
+              const SizedBox(
+                height: 30,
               ),
-              ],
+              Container(
+                  width: 300,
+                  height: 50,
+                  color: Colors.brown,
+                  child: MaterialButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          
+                         bool result = await  firebaseLogin(emailController.text , passwordController.text );
+                          
+                         if(result){ final SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.setString('email', emailController.text);
+                          
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const HomePage(
+                                    // email: emailController.text,
+                                    )),
+                          );
+                          }
+                        }
+                      },
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(color: Colors.white),
+                      ))),
+            ],
           ),
         ),
       ),
     );
   }
-  
 
+  Future<bool> firebaseLogin(String emailAddress, String password) async {
+    try {
+      final credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: emailAddress, password: password);
+          if(credential.user != null){
+            return true;
+          }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+    return false;
+  }
 }
+

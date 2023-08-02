@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:login_design/services/todo_services.dart';
 
 import '../../models/todo_model.dart';
 import 'cubit/cubit/todos_cubit.dart';
@@ -15,15 +15,12 @@ class TodoScreen extends StatefulWidget {
 class _TodoScreenState extends State<TodoScreen> {
   List<Todo> todos = [];
   bool isLoading = true;
-  getTodosFromApi() async {
-    todos = await TodoServices().getTodo();
-    setState(() {});
-  }
+  
 
   @override
   void initState() {
     super.initState();
-    getTodosFromApi();
+   
   }
 
   Widget build(BuildContext context) {
@@ -56,3 +53,11 @@ class _TodoScreenState extends State<TodoScreen> {
     );
   }
 }
+ 
+
+
+// getTodosFromApi() async {
+  //  todos = await TodoServices().getTodo();
+    //setState(() {});
+  //}
+   //getTodosFromApi();
